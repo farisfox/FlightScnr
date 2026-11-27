@@ -33,7 +33,7 @@ jobs:
 
       - name: Download latest release firmware
         env:
-          BOARDS: tencoder-pro waveshare-knob-18
+          BOARDS: tencoder-pro waveshare-knob-18 waveshare-amoled-175c
           ARCHIVE_COUNT: "12"
         run: |
           set -euo pipefail

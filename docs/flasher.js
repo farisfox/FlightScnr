@@ -3,10 +3,13 @@ import { ESPLoader, Transport } from "./vendor/esptool-js.bundle.js";
 const BOARD_AUTO = "auto";
 const BOARD_TENCODER = "tencoder-pro";
 const BOARD_WAVESHARE = "waveshare-knob-18";
+const BOARD_AMOLED_175C = "waveshare-amoled-175c";
 const BOARD_LABELS = {
   [BOARD_TENCODER]: "LilyGO T-Encoder Pro",
   [BOARD_WAVESHARE]: "Waveshare Knob Touch LCD 1.8",
+  [BOARD_AMOLED_175C]: "Waveshare Touch AMOLED 1.75C",
 };
+const KNOWN_BOARDS = [BOARD_TENCODER, BOARD_WAVESHARE, BOARD_AMOLED_175C];
 const BOARD_STORAGE_KEY = "flightscnr-webflasher-board";
 const FULL_FLASH_OFFSET = 0;
 const APP_FLASH_OFFSET = 0x10000;
@@ -154,7 +157,7 @@ function isEspressifNativeUsb(info) {
 }
 
 function isKnownBoardId(id) {
-  return id === BOARD_TENCODER || id === BOARD_WAVESHARE;
+  return KNOWN_BOARDS.includes(id);
 }
 
 function isErasedFlashChunk(bytes) {
@@ -482,7 +485,7 @@ function buildBundledRelease(manifest) {
     manifestBoards[BOARD_TENCODER] = manifest.builds[0];
   }
   const boards = {};
-  for (const board of [BOARD_TENCODER, BOARD_WAVESHARE]) {
+  for (const board of KNOWN_BOARDS) {
     const build =
       manifestBoards[board] ??
       manifest.builds?.find((candidate) => candidate.board === board);
@@ -533,7 +536,7 @@ function buildArchivedRelease(entry) {
     };
   }
   const boards = {};
-  for (const board of [BOARD_TENCODER, BOARD_WAVESHARE]) {
+  for (const board of KNOWN_BOARDS) {
     const archived = archivedBoards[board];
     if (!archived?.merged) {
       continue;
@@ -1032,7 +1035,7 @@ navigator.serial?.addEventListener("disconnect", () => {
 });
 
 const savedBoard = localStorage.getItem(BOARD_STORAGE_KEY);
-if (savedBoard === BOARD_TENCODER || savedBoard === BOARD_WAVESHARE) {
+if (KNOWN_BOARDS.includes(savedBoard)) {
   els.boardSelect.value = savedBoard;
 }
 updateInstallModeUI();

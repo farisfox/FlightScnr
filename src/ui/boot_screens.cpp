@@ -17,15 +17,16 @@ constexpr int kLineGap = 10;
 const int kCenterX = config::kDisplayWidth / 2;
 const int kCenterY = config::kDisplayHeight / 2;
 
-constexpr int kSonarOuterRadius = 186;
-constexpr int kSonarInnerRadius = 118;
+// Tuned on the 390 px T-Encoder; scaled for other panel sizes.
+constexpr int kSonarOuterRadius = (186 * config::kDisplayWidth) / 390;
+constexpr int kSonarInnerRadius = (118 * config::kDisplayWidth) / 390;
 constexpr int kSonarRingStepPx = 6;
 constexpr uint16_t kSonarGuideColor = 0x0320;
 
 char s_connecting_ssid[33];
 char s_ssid_line[33];
 char s_portal_ip_alt[32];
-constexpr int kConnectingTextMaxWidthPx = 358;
+constexpr int kConnectingTextMaxWidthPx = (358 * config::kDisplayWidth) / 390;
 int s_ping_radius = kSonarInnerRadius;
 int s_ping_erase_radius = 0;
 bool s_connecting_text_drawn = false;
@@ -228,7 +229,7 @@ void bootScreenShowConnectFailed() {
       {"Could not connect", displayFontTitle()},
       {"Check Wi-Fi password", displayFontBody()},
       {"and signal strength.", displayFontBody()},
-      {"Hold knob 5 sec", displayFontBody()},
+      {"Hold " FLIGHTSCNR_RESET_BUTTON_LABEL " 5 sec", displayFontBody()},
       {"to reset Wi-Fi", displayFontBody()},
   };
   drawTextBlock(config::kColorBlack, config::kTextOnBlack, lines,

@@ -37,7 +37,7 @@ constexpr char kAvailKey[] = "av";
 
 constexpr char kApiHost[] = "api.github.com";
 constexpr char kApiPath[] =
-    "/repos/yashmulgaonkar/FlightScnr/releases/latest";
+    "/repos/" FLIGHTSCNR_GITHUB_REPO "/releases/latest";
 constexpr char kAppAssetName[] = "FlightScnr-" FLIGHTSCNR_BOARD_NAME "-app.bin";
 constexpr char kUserAgent[] = "FlightScnr-OTA";
 

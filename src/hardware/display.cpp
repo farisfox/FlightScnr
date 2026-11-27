@@ -48,8 +48,11 @@ void displayInit() {
                 static_cast<unsigned>(FLIGHTSCNR_DISPLAY_ROTATION));
 #else
   if (hardware::panelUsesCo5300()) {
-    s_panel = new Arduino_CO5300(s_bus, LCD_RST, 0, false, LCD_WIDTH, LCD_HEIGHT,
-                                 0, 0, 0, 0);
+    // LCD_COL_OFFSET is 0 on the T-Encoder and 6 on the AMOLED 1.75C (466 px
+    // visible inside a 480-wide controller; value from Waveshare's example).
+    s_panel = new Arduino_CO5300(s_bus, LCD_RST, FLIGHTSCNR_DISPLAY_ROTATION, false,
+                                 LCD_WIDTH, LCD_HEIGHT, LCD_COL_OFFSET, 0,
+                                 LCD_COL_OFFSET, 0);
     Arduino_TFT::setPixelAlign2(true);
     Serial.println("Display: CO5300");
   } else {

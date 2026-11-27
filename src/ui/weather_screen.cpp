@@ -57,6 +57,18 @@ constexpr int kHiY = 194;
 constexpr int kLoY = 226;
 constexpr int kRainY = 252;
 constexpr int kCreditY = 288;
+#elif defined(FLIGHTSCNR_BOARD_WAVESHARE_AMOLED_175C)
+// 466 px AMOLED 1.75C: the 390 px layout scaled by ~1.2 so the forecast fills
+// the larger circle instead of crowding the top. Fonts keep the 390 px choices.
+constexpr int kForecastColOffset = 132;
+constexpr int kForecastIconSize = 86;
+constexpr int kTitleY = 58;
+constexpr int kLabelY = 124;
+constexpr int kIconY = 153;
+constexpr int kHiY = 256;
+constexpr int kLoY = 306;
+constexpr int kRainY = 349;
+constexpr int kCreditY = 394;
 #else
 constexpr int kForecastColOffset = 110;
 // Smaller icons leave room for the larger hi/lo temperature fonts.

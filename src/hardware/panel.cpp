@@ -16,6 +16,8 @@ constexpr char kPanelKey[] = "panel_hw";
 
 #if defined(FLIGHTSCNR_BOARD_WAVESHARE_KNOB_18)
 PanelType s_panel = PanelType::WaveshareSt77916;
+#elif defined(FLIGHTSCNR_BOARD_WAVESHARE_AMOLED_175C)
+PanelType s_panel = PanelType::WaveshareCo5300Cst9217;
 #else
 PanelType s_panel = PanelType::DxqSh8601;
 #endif
@@ -88,6 +90,10 @@ void panelBootResolve() {
   s_panel = PanelType::WaveshareSt77916;
   Serial.println("Panel: Waveshare ST77916 / CST816 (compile-time board)");
   return;
+#elif defined(FLIGHTSCNR_BOARD_WAVESHARE_AMOLED_175C)
+  s_panel = PanelType::WaveshareCo5300Cst9217;
+  Serial.println("Panel: Waveshare AMOLED 1.75C CO5300 / CST9217 (compile-time board)");
+  return;
 #elif defined(FLIGHTSCNR_PANEL_TFD12)
   s_panel = PanelType::TfdCo5300;
   Serial.println("Panel: forced TFD12 / CO5300 / CST816 (build flag)");
@@ -120,16 +126,22 @@ const char* panelTypeName() {
       return "TFD12 / CO5300";
     case PanelType::WaveshareSt77916:
       return "Waveshare / ST77916";
+    case PanelType::WaveshareCo5300Cst9217:
+      return "Waveshare AMOLED 1.75C / CO5300";
     case PanelType::DxqSh8601:
     default:
       return "DXQ120 / SH8601";
   }
 }
 
-bool panelUsesCo5300() { return s_panel == PanelType::TfdCo5300; }
+bool panelUsesCo5300() {
+  return s_panel == PanelType::TfdCo5300 || s_panel == PanelType::WaveshareCo5300Cst9217;
+}
 
 bool panelUsesCst816() {
   return s_panel == PanelType::TfdCo5300 || s_panel == PanelType::WaveshareSt77916;
 }
+
+bool panelUsesCst9217() { return s_panel == PanelType::WaveshareCo5300Cst9217; }
 
 }  // namespace hardware

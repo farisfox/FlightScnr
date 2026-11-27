@@ -4,7 +4,7 @@
 # blocked by CORS (TypeError: Failed to fetch).
 set -euo pipefail
 
-BOARDS="${BOARDS:-tencoder-pro waveshare-knob-18}"
+BOARDS="${BOARDS:-tencoder-pro waveshare-knob-18 waveshare-amoled-175c}"
 REPO="${GITHUB_REPOSITORY:?GITHUB_REPOSITORY is required}"
 ARCHIVE_COUNT="${ARCHIVE_COUNT:-12}"
 DOCS_FW="${DOCS_FW:-docs/firmware}"
@@ -91,6 +91,9 @@ jq -n \
       [$boards["tencoder-pro"] + {board: "tencoder-pro"}] +
       (if $boards["waveshare-knob-18"] then
          [$boards["waveshare-knob-18"] + {board: "waveshare-knob-18"}]
+       else [] end) +
+      (if $boards["waveshare-amoled-175c"] then
+         [$boards["waveshare-amoled-175c"] + {board: "waveshare-amoled-175c"}]
        else [] end)
     ),
     size: $boards["tencoder-pro"].parts[0].size

@@ -12,7 +12,9 @@ The best part? There is absolutely no coding or soldering required!
   </a>
 </p>
 
-Open-source firmware that shows **live ADS-B traffic** on a sweeping radar around your preset position. Built for the **[LilyGO T-Encoder Pro](https://www.lilygo.cc/zo4apl)** and the **[Waveshare ESP32-S3-Knob-Touch-LCD-1.8](https://www.waveshare.com/wiki/ESP32-S3-Knob-Touch-LCD-1.8)**, inspired by **[ESP32-Plane-Radar](https://github.com/MatixYo/ESP32-Plane-Radar)** and **[deskradar](https://github.com/arvis91/deskradar)**.
+Open-source firmware that shows **live ADS-B traffic** on a sweeping radar around your preset position. Built for the **[LilyGO T-Encoder Pro](https://www.lilygo.cc/zo4apl)**, the **[Waveshare ESP32-S3-Knob-Touch-LCD-1.8](https://www.waveshare.com/wiki/ESP32-S3-Knob-Touch-LCD-1.8)** and the **[Waveshare ESP32-S3-Touch-AMOLED-1.75C](https://www.waveshare.com/wiki/ESP32-S3-Touch-AMOLED-1.75)**, inspired by **[ESP32-Plane-Radar](https://github.com/MatixYo/ESP32-Plane-Radar)** and **[deskradar](https://github.com/arvis91/deskradar)**.
+
+> **About this fork:** [farisfox/FlightScnr](https://github.com/farisfox/FlightScnr) adds the Waveshare AMOLED 1.75C (466×466 round AMOLED, touch only, no knob) on top of [yashmulgaonkar/FlightScnr](https://github.com/yashmulgaonkar/FlightScnr). Releases, OTA updates and the WebFlasher of this fork include all three boards. Port details: [docs/boards/waveshare-amoled-175c.md](docs/boards/waveshare-amoled-175c.md) and [ADR 0004](docs/adr/0004-waveshare-amoled-175c-port.md).
 
 Firmware is **[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)** ([LICENSE](LICENSE)) - shareable for hobbyists, not for closed commercial forks.
 
@@ -22,7 +24,7 @@ Firmware is **[CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.
 
 ## Contributing
 
-Contributions are welcome. If you find a bug, have an idea, or want to improve the project, open a [pull request](https://github.com/yashmulgaonkar/FlightScnr/pulls). For larger changes, opening an [issue](https://github.com/yashmulgaonkar/FlightScnr/issues) first is helpful so we can discuss the approach.
+Contributions are welcome. If you find a bug, have an idea, or want to improve the project, open a [pull request](https://github.com/yashmulgaonkar/FlightScnr/pulls). For larger changes, opening an [issue](https://github.com/yashmulgaonkar/FlightScnr/issues) first is helpful so we can discuss the approach. Issues specific to the AMOLED 1.75C port belong in [this fork](https://github.com/farisfox/FlightScnr/issues).
 
 Join the [FlightScnr community on **Discord**](https://discord.gg/wjqgUjv8Re) for any questions or troubleshooting help.
 
@@ -50,7 +52,9 @@ Screen timeouts (configurable on web or device page 2): flight detail 10/20/30s 
 
 **From flight detail / settings / about:** swipe right (or timeout) → back
 
-**Everywhere:** hold knob **5 s** = clear all Wi‑Fi networks and open the setup portal (T-Encoder only — Waveshare has no knob button; use the web UI). Do **not** hold the screen at power-on - that is BOOT/download mode.
+**Everywhere:** hold knob **5 s** = clear all Wi‑Fi networks and open the setup portal (T-Encoder; on the AMOLED 1.75C hold **BOOT** 5 s; the Knob 1.8 has no knob button, so use the web UI). Do **not** hold the screen (T-Encoder) or BOOT (1.75C) at power-on - that is download mode.
+
+**AMOLED 1.75C (no knob):** drag a finger **around the edge of the screen** wherever the other boards turn the knob (clockwise = clockwise). **BOOT** short press = knob press. Tap advances aircraft on flight detail and cycles the focused row on settings pages, as on the Knob 1.8. Swipes work as listed above. See [docs/boards/waveshare-amoled-175c.md](docs/boards/waveshare-amoled-175c.md#controls).
 
 On-device settings: page 2 = brightness, units, compass, sweep, timeouts, idle clock. Page 3 = radar color, beep on/off, tone A–E.
 
@@ -68,7 +72,7 @@ If a network fails repeatedly, it is **temporarily skipped** for the rest of tha
 
 If Wi‑Fi stays down through several reconnect attempts, the setup portal opens again (networks are **not** wiped) so you can add or fix a network.
 
-To change other settings later: same URL, **Save**. To wipe all Wi‑Fi networks and reopen the portal: hold knob 5s. 
+To change other settings later: same URL, **Save**. To wipe all Wi‑Fi networks and reopen the portal: hold knob 5s (BOOT 5s on the AMOLED 1.75C). 
 
 ## Screenshots
 
@@ -89,9 +93,10 @@ To change other settings later: same URL, **Save**. To wipe all Wi‑Fi networks
 
 | Item          | Details                                                                                                                             |
 | ------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| **Boards**    | [LilyGO T-Encoder Pro](https://www.lilygo.cc/zo4apl) (390×390 AMOLED) or [Waveshare ESP32-S3-Knob-Touch-LCD-1.8](https://www.waveshare.com/wiki/ESP32-S3-Knob-Touch-LCD-1.8) (360×360 IPS). Board is selected at **compile time**. |
+| **Boards**    | [LilyGO T-Encoder Pro](https://www.lilygo.cc/zo4apl) (390×390 AMOLED), [Waveshare ESP32-S3-Knob-Touch-LCD-1.8](https://www.waveshare.com/wiki/ESP32-S3-Knob-Touch-LCD-1.8) (360×360 IPS) or [Waveshare ESP32-S3-Touch-AMOLED-1.75C](https://www.waveshare.com/wiki/ESP32-S3-Touch-AMOLED-1.75) (466×466 AMOLED). Board is selected at **compile time**. |
 | **T-Encoder** | Auto-detects DXQ120 (SH8601) or TFD12 (CO5300) panel at boot; piezo beep + knob push button                                          |
 | **Waveshare** | ST77916 + CST816; PWM backlight; rotary encoder only (no push button — Wi‑Fi wipe via web UI); no piezo                             |
+| **AMOLED 1.75C** | CO5300 + CST9217; touch only (edge-drag dial replaces the knob, BOOT = knob press); no piezo. The **C** variant is wired differently from the plain 1.75, which is not supported. [Board notes](docs/boards/waveshare-amoled-175c.md) |
 | **Enclosure** | [MakerWorld](https://makerworld.com/en/models/2902669-flightscnr-live-ads-b-traffic-sweeping-radar#profileId-3245055) (T-Encoder; not in repo) |
 
 
@@ -103,24 +108,25 @@ Requires [PlatformIO](https://platformio.org/).
 pio run -t upload                         # auto: USB heuristic / last board / T-Encoder default
 pio run -e tencoder-pro -t upload         # LilyGO T-Encoder Pro
 pio run -e waveshare-knob-18 -t upload   # Waveshare Knob Touch LCD 1.8
-# or: set FLIGHTSCNR_BOARD=waveshare-knob-18
+pio run -e waveshare-amoled-175c -t upload  # Waveshare Touch AMOLED 1.75C
+# or: set FLIGHTSCNR_BOARD=waveshare-knob-18 (or waveshare-amoled-175c)
 ```
 
-On Waveshare, USB-C plug **orientation** matters (CH334 hub). If esptool reports the wrong chip, flip the cable.
+On the Waveshare Knob, USB-C plug **orientation** matters (CH334 hub). If esptool reports the wrong chip, flip the cable. The AMOLED 1.75C has native USB only, so `auto` cannot detect it: use its env or `FLIGHTSCNR_BOARD`. If its port does not appear, hold **BOOT** while plugging in.
 
-**WebFlasher (no PlatformIO):** [yashmulgaonkar.github.io/FlightScnr](https://yashmulgaonkar.github.io/FlightScnr) supports both boards. Connect → confirm the Auto-detected board (or select it manually) → choose a release → Install. USB VID/PID alone cannot tell the boards apart (both use Espressif native USB `0x303A:0x1001`). Auto instead looks for a FlightScnr board marker already in flash, then falls back to the SPI flash manufacturer as a hint (Boya → Waveshare, Winbond → T-Encoder on known units). Always confirm before Install. Older releases may be T-Encoder-only and are offered as full installs for safer downgrades.
+**WebFlasher (no PlatformIO):** [farisfox.github.io/FlightScnr](https://farisfox.github.io/FlightScnr) supports all three boards (select the AMOLED 1.75C manually on its first install). Connect → confirm the Auto-detected board (or select it manually) → choose a release → Install. USB VID/PID alone cannot tell the boards apart (both use Espressif native USB `0x303A:0x1001`). Auto instead looks for a FlightScnr board marker already in flash, then falls back to the SPI flash manufacturer as a hint (Boya → Waveshare, Winbond → T-Encoder on known units). Always confirm before Install. Older releases may be T-Encoder-only and are offered as full installs for safer downgrades.
 
 ### Firmware update over Wi‑Fi (OTA)
 
 Once the unit is on your network, open the web settings page (`http://flightscnr-xxxx.local/` or the device IP):
 
-1. **Firmware update** card → **Check GitHub** / **Install latest** to pull the board-specific app image (`FlightScnr-tencoder-pro-app.bin` or `FlightScnr-waveshare-knob-18-app.bin`) from the latest [GitHub release](https://github.com/yashmulgaonkar/FlightScnr/releases) (app image only — not the merged factory file).
+1. **Firmware update** card → **Check GitHub** / **Install latest** to pull the board-specific app image (`FlightScnr-tencoder-pro-app.bin`, `FlightScnr-waveshare-knob-18-app.bin` or `FlightScnr-waveshare-amoled-175c-app.bin`) from the latest [GitHub release](https://github.com/farisfox/FlightScnr/releases) of this fork (set by `FLIGHTSCNR_GITHUB_REPO` in `include/config.h`) (app image only — not the merged factory file).
 2. Or upload an app `.bin` manually (same card).
 3. After a successful install, **press the device reset button** (or power-cycle). Do not rely on a soft reboot.
 
 The device also checks GitHub for a newer release **on every boot** and again after **24 hours of uptime**. If one is available, the **About** screen shows a short “Update available” note (install remains on the web portal).
 
-**Merged binary:** `pio run -t merge -e tencoder-pro` (or `-e waveshare-knob-18`) → `.pio/build/<env>/firmware-merged.bin`
+**Merged binary:** `pio run -t merge -e tencoder-pro` (or `-e waveshare-knob-18` / `-e waveshare-amoled-175c`) → `.pio/build/<env>/firmware-merged.bin`
 
 Builds auto-download [tar1090-db](https://github.com/wiedehopf/tar1090-db) and [Airports](https://github.com/mwgg/Airports) lookups. Wrong T-Encoder panel saved? Erase flash and re-detect, or override with `-D FLIGHTSCNR_PANEL_DXQ` / `-D FLIGHTSCNR_PANEL_TFD12` in `platformio.ini`.
 
