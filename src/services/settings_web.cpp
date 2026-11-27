@@ -936,7 +936,7 @@ void handleSettingsPage() {
       beep_tone == 'C' ? " selected" : "", beep_tone == 'D' ? " selected" : "",
       beep_tone == 'E' ? " selected" : "");
   appendClamped(page, kSettingsPageCap, &used, beep_n);
-#if !FLIGHTSCNR_HAS_BUZZER
+#if !FLIGHTSCNR_HAS_BUZZER && !FLIGHTSCNR_HAS_SPEAKER
   appendRaw(page, kSettingsPageCap, &used,
             "<p class=\"hint\">This board has no buzzer, so these settings have no "
             "effect on it yet.</p>");

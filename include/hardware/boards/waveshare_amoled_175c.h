@@ -12,7 +12,8 @@
  * Inputs: there is no rotary encoder. The touchscreen's outer ring works as a
  * virtual knob (drag along the edge), and the BOOT button (GPIO 0) acts as the
  * knob push button (short press = knob tap, hold 5 s = Wi-Fi reset).
- * No piezo buzzer or haptic motor (the ES8311 speaker codec is not used yet).
+ * No piezo buzzer or haptic motor. UI beeps and alerts are short tones played
+ * through the ES8311 codec and speaker (I2S, see FLIGHTSCNR_HAS_SPEAKER).
  */
 
 #define FLIGHTSCNR_BOARD_NAME "waveshare-amoled-175c"
@@ -23,6 +24,7 @@
 #define FLIGHTSCNR_HAS_TOUCH_DIAL 1
 #define FLIGHTSCNR_HAS_CST9217 1
 #define FLIGHTSCNR_HAS_BUZZER 0
+#define FLIGHTSCNR_HAS_SPEAKER 1
 #define FLIGHTSCNR_HAS_HAPTIC 0
 #define FLIGHTSCNR_HAS_LCD_VCI_EN 0
 #define FLIGHTSCNR_HAS_LCD_BACKLIGHT_PWM 0
@@ -63,6 +65,17 @@
 
 /** Arduino_GFX / CO5300 rotation (0–3). */
 #define FLIGHTSCNR_DISPLAY_ROTATION 0
+
+/* ES8311 speaker codec: control on the shared I2C bus (0x18), audio over I2S.
+ * Pins other than MCLK are carried over from the non-C board and not yet
+ * confirmed on the C. See docs/boards/waveshare-amoled-175c.md. */
+#define ES8311_I2C_ADDRESS 0x18
+#define I2S_MCLK 16
+#define I2S_BCLK 9
+#define I2S_WS 45
+#define I2S_DOUT 8
+/** Power-amplifier enable GPIO, or -1 when the amp is always on / unknown. */
+#define SPEAKER_PA_EN -1
 
 /** BOOT button, active low. Holding it while plugging in USB enters download mode. */
 #define KNOB_KEY 0

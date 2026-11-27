@@ -54,7 +54,17 @@ knob-button role (short press, 5 s Wi-Fi reset). On touch-first boards, a tap
 also advances flight detail and settings focus (as on the Knob 1.8), and swipe
 left on flight detail steps to the next aircraft.
 
-### 5. OTA and WebFlasher follow this fork
+### 5. Beeps through the ES8311 speaker
+
+The board has no buzzer, but UI beeps and aircraft alerts are expected to make
+a noise. A new `FLIGHTSCNR_HAS_SPEAKER` flag routes the existing beep and alert
+calls in `buzzer.cpp` to a small ES8311 driver: register init over I2C, then
+short enveloped sine tones written to the legacy I2S driver (no new library).
+Pitch and loudness follow the existing A to E tone setting. The speaker's
+amplifier enable (if any) and the I2S pins other than MCLK are unconfirmed, so
+`SPEAKER_PA_EN` is a board-header define that defaults to "not used".
+
+### 6. OTA and WebFlasher follow this fork
 
 Upstream releases have no 1.75C image, so OTA, web UI links, the release notes
 and the WebFlasher point at `farisfox/FlightScnr`. The repo is one define,
@@ -63,7 +73,6 @@ one-line change if the port is merged there.
 
 ## Not done
 
-- ES8311 speaker beeps (no buzzer on this board).
 - AXP2101 PMU configuration and battery readout.
 - QMI8658 IMU (e.g. auto-rotation).
 - Use of the tearing-effect line and the PWR button.

@@ -16,7 +16,7 @@ Design decisions are in [ADR 0004](../adr/0004-waveshare-amoled-175c-port.md).
 | MCU / memory | ESP32-S3R8, 8 MB octal PSRAM, 32 MB flash (built as 16 MB, see below) |
 | Display | CO5300 round AMOLED, 466×466, QSPI, no backlight pin (brightness = panel command 0x51) |
 | Touch | CST9217 on I2C `0x5A` |
-| Other I2C | AXP2101 PMIC `0x34`, QMI8658 IMU `0x6B`, ES8311 speaker codec `0x18`, ES7210 mic ADC `0x40` (none used by FlightScnr yet) |
+| Other I2C | AXP2101 PMIC `0x34`, QMI8658 IMU `0x6B`, ES8311 speaker codec `0x18`, ES7210 mic ADC `0x40` (only the ES8311 is used, for beeps) |
 | Buttons | BOOT (GPIO 0, active low), PWR (GPIO 3 sense) |
 | USB | ESP32-S3 native USB only (no CH343 bridge) |
 | Not fitted | microSD, RTC, TCA9554 I/O expander, buzzer, vibration motor, rotary encoder |
@@ -123,11 +123,20 @@ unused, and app images have the same layout as the other boards.
 - **PMU:** the AXP2101 is left at its power-on defaults; other projects bring the
   panel up without configuring it. If the screen stays black, check the PMU
   rails first.
-- **Sound:** no buzzer. The ES8311 speaker is not driven, and the web portal's
-  Sound card says so.
+- **Sound:** no buzzer, so UI beeps and aircraft alerts are short sine tones
+  played through the ES8311 codec and speaker. The codec is configured over I2C
+  (`0x18`) at boot for 16 kHz / 16-bit with MCLK = 256 x fs, then tones go out
+  over I2S (MCLK 16, BCLK 9, WS 45, DOUT 8). The "Beep tone" setting A to E
+  scales pitch and loudness. If the serial log says `Speaker: ES8311 init
+  failed`, the codec did not answer on the I2C bus. If it says ready but you
+  hear nothing, the amplifier probably needs enabling: set `SPEAKER_PA_EN` in
+  the board header to the right GPIO. The I2S pins other than MCLK are carried
+  over from the non-C board and are unconfirmed.
 
 ## Still to verify on hardware
 
+0. Speaker: beeps on tap and the three-beep aircraft alert are audible, and the
+   serial log shows `Speaker: ES8311 ready`.
 1. Panel shows a full, centered image (column offset 6, rotation 0).
 2. Touch coordinates match the display (orientation flags above).
 3. CST9217 frames are read reliably by polling (no INT handling yet).
