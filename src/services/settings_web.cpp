@@ -899,7 +899,8 @@ void handleSettingsPage() {
   }
   appendRaw(page, kSettingsPageCap, &used,
             "<p class=\"note\">During off-hours the device shows a dim clock or turns off the "
-            "display. All API calls are paused. Knob press wakes the device.</p>");
+            "display. All API calls are paused. A " FLIGHTSCNR_RESET_BUTTON_LABEL
+            " press or a screen tap wakes the device.</p>");
   appendRaw(page, kSettingsPageCap, &used, "</div></details>");
 
   // ---------- Sound / haptic card ----------
@@ -935,6 +936,11 @@ void handleSettingsPage() {
       beep_tone == 'C' ? " selected" : "", beep_tone == 'D' ? " selected" : "",
       beep_tone == 'E' ? " selected" : "");
   appendClamped(page, kSettingsPageCap, &used, beep_n);
+#if !FLIGHTSCNR_HAS_BUZZER && !FLIGHTSCNR_HAS_SPEAKER
+  appendRaw(page, kSettingsPageCap, &used,
+            "<p class=\"hint\">This board has no buzzer, so these settings have no "
+            "effect on it yet.</p>");
+#endif
 #endif
   appendRaw(page, kSettingsPageCap, &used, "</div></details>");
 
@@ -1301,7 +1307,7 @@ void handleSettingsPage() {
   }
 
   appendRaw(page, kSettingsPageCap, &used,
-            "<p class=\"wifi-note\">Hold knob 5&nbsp;s clears all networks and opens the setup "
+            "<p class=\"wifi-note\">Hold " FLIGHTSCNR_RESET_BUTTON_LABEL " 5&nbsp;s clears all networks and opens the setup "
             "portal.</p></div></details>");
 
   // ---------- Route cache card ----------
@@ -1356,7 +1362,7 @@ void handleSettingsPage() {
   const int tail_n = snprintf(
       page + used, kSettingsPageCap - used,
       "<p class=\"foot\"><a href=\"%s\" target=\"_blank\" rel=\"noopener\">"
-      "github.com/yashmulgaonkar/FlightScnr</a></p>"
+      "github.com/" FLIGHTSCNR_GITHUB_REPO "</a></p>"
       "</div>"
       "<div class=\"savebar\"><div class=\"inner\">"
       "<button class=\"save\" type=\"submit\" form=\"fs-save\">Save</button></div></div>"

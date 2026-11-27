@@ -7,7 +7,9 @@ Resolution order (for env `auto` only):
   3. Last successful selection in .pio/last_board
   4. Default: tencoder-pro
 
-Explicit envs (`tencoder-pro`, `waveshare-knob-18`) keep their platformio.ini macros.
+Explicit envs (`tencoder-pro`, `waveshare-knob-18`, `waveshare-amoled-175c`) keep
+their platformio.ini macros. The AMOLED 1.75C uses native USB only (no CH343), so
+the USB heuristic cannot spot it: pick it with its env or FLIGHTSCNR_BOARD.
 """
 
 from __future__ import annotations
@@ -23,11 +25,13 @@ LAST_BOARD_PATH = PIO_DIR / "last_board"
 
 BOARD_TENCODER = "tencoder-pro"
 BOARD_WAVESHARE = "waveshare-knob-18"
-VALID_BOARDS = {BOARD_TENCODER, BOARD_WAVESHARE}
+BOARD_AMOLED_175C = "waveshare-amoled-175c"
+VALID_BOARDS = {BOARD_TENCODER, BOARD_WAVESHARE, BOARD_AMOLED_175C}
 
 BOARD_MACROS = {
     BOARD_TENCODER: "FLIGHTSCNR_BOARD_TENCODER_PRO",
     BOARD_WAVESHARE: "FLIGHTSCNR_BOARD_WAVESHARE_KNOB_18",
+    BOARD_AMOLED_175C: "FLIGHTSCNR_BOARD_WAVESHARE_AMOLED_175C",
 }
 
 
@@ -45,6 +49,11 @@ def _normalize(name: str | None) -> str | None:
         "waveshare-knob-1.8": BOARD_WAVESHARE,  # legacy alias
         "knob-1.8": BOARD_WAVESHARE,
         "knob-18": BOARD_WAVESHARE,
+        "waveshare-amoled-175c": BOARD_AMOLED_175C,
+        "waveshare-amoled-1.75c": BOARD_AMOLED_175C,
+        "amoled-175c": BOARD_AMOLED_175C,
+        "amoled-1.75c": BOARD_AMOLED_175C,
+        "175c": BOARD_AMOLED_175C,
     }
     resolved = aliases.get(name, name)
     return resolved if resolved in VALID_BOARDS else None

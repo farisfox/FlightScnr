@@ -1156,6 +1156,13 @@ void handleNavigation() {
   } else if (swipe == SwipeRight && g_screen == AppScreen::FlightDetail) {
     returnToRadar(false, true);
     navigated = true;
+#if FLIGHTSCNR_TAP_ACTS_AS_KNOB
+  } else if (swipe == SwipeLeft && g_screen == AppScreen::FlightDetail) {
+    // Touch-first boards: swipe left also steps to the next aircraft.
+    noteSecondaryActivity();
+    onFlightDetailStep(1);
+    hardware::buzzerClick();
+#endif
   } else if (swipe == SwipeRight && g_screen == AppScreen::Orientation) {
     cancelOrientationAdjust();
     navigated = true;
@@ -1455,8 +1462,9 @@ void handleInput() {
   }
 
   if (g_screen == AppScreen::FlightDetail) {
-#if !FLIGHTSCNR_HAS_KNOB_BUTTON
-    // No knob button — tap advances to the next aircraft (same as encoder +1).
+#if FLIGHTSCNR_TAP_ACTS_AS_KNOB
+    // Touch-first board (no knob button or no encoder) — tap advances to the
+    // next aircraft (same as encoder +1).
     if (inputConsumeScreenTap(nullptr, nullptr)) {
       noteSecondaryActivity();
       onFlightDetailStep(1);
@@ -1481,7 +1489,7 @@ void handleInput() {
       }
       // Waveshare has no knob button — screen tap advances the focused row.
       if (inputConsumeKnobTap()
-#if !FLIGHTSCNR_HAS_KNOB_BUTTON
+#if FLIGHTSCNR_TAP_ACTS_AS_KNOB
           || inputConsumeScreenTap(nullptr, nullptr)
 #endif
       ) {
@@ -1496,7 +1504,7 @@ void handleInput() {
         hardware::buzzerClick();
       }
       if (inputConsumeKnobTap()
-#if !FLIGHTSCNR_HAS_KNOB_BUTTON
+#if FLIGHTSCNR_TAP_ACTS_AS_KNOB
           || inputConsumeScreenTap(nullptr, nullptr)
 #endif
       ) {
@@ -1506,7 +1514,7 @@ void handleInput() {
         return;
       }
     }
-#if FLIGHTSCNR_HAS_KNOB_BUTTON
+#if !FLIGHTSCNR_TAP_ACTS_AS_KNOB
     // Discard stray taps on settings pages that do not use them.
 #else
     else {
@@ -1592,7 +1600,7 @@ void handleInput() {
       hardware::buzzerClick();
     }
     if (inputConsumeKnobTap()
-#if !FLIGHTSCNR_HAS_KNOB_BUTTON
+#if FLIGHTSCNR_TAP_ACTS_AS_KNOB
         || inputConsumeScreenTap(nullptr, nullptr)
 #endif
     ) {

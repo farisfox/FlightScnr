@@ -15,12 +15,21 @@ namespace config {
 /** Build-time firmware version (release CI sets FLIGHTSCNR_FIRMWARE_VERSION). */
 constexpr char kFirmwareVersion[] = FLIGHTSCNR_FIRMWARE_VERSION;
 
+/**
+ * GitHub "owner/name" this firmware is published from. OTA checks its latest
+ * release and the web UIs link to it. This fork (which adds the Waveshare
+ * AMOLED 1.75C) publishes its own releases; upstream is yashmulgaonkar/FlightScnr.
+ * Override with -D FLIGHTSCNR_GITHUB_REPO=\"owner/name\".
+ */
+#ifndef FLIGHTSCNR_GITHUB_REPO
+#define FLIGHTSCNR_GITHUB_REPO "farisfox/FlightScnr"
+#endif
+
 /** Project source repository (linked on device web UIs). */
-constexpr char kGithubRepoUrl[] =
-    "https://github.com/yashmulgaonkar/FlightScnr";
+constexpr char kGithubRepoUrl[] = "https://github.com/" FLIGHTSCNR_GITHUB_REPO;
 
 /** Captive portal footer link (placeholder until author page is ready). */
-constexpr char kPortalAuthorUrl[] = "https://github.com/yashmulgaonkar/FlightScnr";
+constexpr char kPortalAuthorUrl[] = "https://github.com/" FLIGHTSCNR_GITHUB_REPO;
 
 // --- Wi-Fi portal ---
 /** SoftAP SSID prefix; full name is prefix + "-" + MAC suffix (see device_identity). */
@@ -218,7 +227,7 @@ constexpr unsigned long kAircraftPhotoDebounceMs = 450UL;
 /** Descriptive User-Agent required by Planespotters Photo API. */
 constexpr char kPlanespottersUserAgent[] =
     "FlightScnr/" FLIGHTSCNR_FIRMWARE_VERSION
-    " (+https://github.com/yashmulgaonkar/FlightScnr)";
+    " (+https://github.com/" FLIGHTSCNR_GITHUB_REPO ")";
 /** Restart route worker if stuck on a stale callsign (ms). */
 constexpr unsigned long kDetailWorkerStallMs = 12000UL;
 /** Faster recovery when the worker is enriching a callsign you scrolled past. */

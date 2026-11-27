@@ -2,17 +2,20 @@
 
 #include <Wire.h>
 
+#include <algorithm>
 #include <cmath>
 #include <memory>
+#include <utility>
 
-#if !defined(FLIGHTSCNR_BOARD_WAVESHARE_KNOB_18)
+#include "hardware/pin_config.h"
+
+#if FLIGHTSCNR_HAS_CHSC5816
 #include "TouchDrvCHSC5816.hpp"
 #endif
 #include "Arduino_DriveBus_Library.h"
 #include "config.h"
 #include "hardware/buzzer.h"
 #include "hardware/panel.h"
-#include "hardware/pin_config.h"
 #include "services/wifi_setup.h"
 #include "touch_chip/Arduino_CST816x.h"
 #include "ui/boot_screens.h"
@@ -103,7 +106,7 @@ void waveshareEncoderTimerCb(void* /*arg*/) {
 }
 #endif
 
-#if !defined(FLIGHTSCNR_BOARD_WAVESHARE_KNOB_18)
+#if FLIGHTSCNR_HAS_CHSC5816
 TouchDrvCHSC5816 s_touch;
 #endif
 std::shared_ptr<Arduino_IIC_DriveBus> s_cst816_bus;
@@ -156,7 +159,7 @@ void initKnobButton() {
 #endif
 }
 
-#if !defined(FLIGHTSCNR_BOARD_WAVESHARE_KNOB_18)
+#if FLIGHTSCNR_HAS_ENCODER && !defined(FLIGHTSCNR_BOARD_WAVESHARE_KNOB_18)
 void IRAM_ATTR onEncoderIsr() {
   uint8_t state = 0;
   if (digitalRead(static_cast<uint8_t>(config::kKnobPinA))) {
@@ -197,6 +200,10 @@ void IRAM_ATTR onEncoderIsr() {
 #endif
 
 void initEncoder() {
+#if !FLIGHTSCNR_HAS_ENCODER
+  // No rotary encoder on this board; see the touch dial below.
+  return;
+#else
   pinMode(config::kKnobPinA, INPUT_PULLUP);
   pinMode(config::kKnobPinB, INPUT_PULLUP);
 
@@ -238,6 +245,7 @@ void initEncoder() {
                 static_cast<int>(config::kKnobPinA),
                 static_cast<int>(config::kKnobPinB));
 #endif
+#endif  // FLIGHTSCNR_HAS_ENCODER
 }
 
 void pollEncoder() {
@@ -250,7 +258,7 @@ void onCst816Interrupt() {
   }
 }
 
-#if !defined(FLIGHTSCNR_BOARD_WAVESHARE_KNOB_18)
+#if FLIGHTSCNR_HAS_CHSC5816
 void initTouchChsc5816() {
   s_touch.setPins(TOUCH_RST, TOUCH_INT);
   if (!s_touch.begin(Wire, CHSC5816_SLAVE_ADDRESS, IIC_SDA, IIC_SCL)) {
@@ -284,11 +292,51 @@ void initTouchCst816() {
   Serial.println("CST816 touch ready");
 }
 
+#if FLIGHTSCNR_HAS_CST9217
+// --- CST9217 (Waveshare AMOLED 1.75C) ---------------------------------------
+// Register protocol follows lewisxhe/SensorLib TouchDrvCST92xx (MIT): read
+// 16-bit register 0xD000, then write 0xAB back to it to acknowledge the frame.
+bool s_cst9217_ready = false;
+unsigned long s_cst9217_last_poll_ms = 0;
+unsigned long s_cst9217_last_valid_ms = 0;
+constexpr uint8_t kCst9217Ack = 0xAB;
+constexpr uint8_t kCst9217MaxFingers = 2;
+constexpr unsigned long kCst9217PollIntervalMs = 10;
+/** Treat a touch as released if no valid frame arrives for this long. */
+constexpr unsigned long kCst9217StaleReleaseMs = 150;
+
+void initTouchCst9217() {
+  pinMode(TOUCH_INT, INPUT_PULLUP);
+  pinMode(TOUCH_RST, OUTPUT);
+  digitalWrite(TOUCH_RST, LOW);
+  delay(10);
+  digitalWrite(TOUCH_RST, HIGH);
+  delay(60);
+
+  Wire.begin(IIC_SDA, IIC_SCL);
+  Wire.beginTransmission(CST9217_SLAVE_ADDRESS);
+  if (Wire.endTransmission() != 0) {
+    Serial.println("CST9217 touch not found at 0x5A — BOOT button only");
+    s_touch_ready = false;
+    return;
+  }
+  s_cst9217_ready = true;
+  s_touch_ready = true;
+  Serial.println("CST9217 touch ready");
+}
+#endif  // FLIGHTSCNR_HAS_CST9217
+
 void initTouch() {
+#if FLIGHTSCNR_HAS_CST9217
+  if (hardware::panelUsesCst9217()) {
+    initTouchCst9217();
+    return;
+  }
+#endif
   if (hardware::panelUsesCst816()) {
     initTouchCst816();
   } else {
-#if !defined(FLIGHTSCNR_BOARD_WAVESHARE_KNOB_18)
+#if FLIGHTSCNR_HAS_CHSC5816
     initTouchChsc5816();
 #endif
   }
@@ -318,6 +366,15 @@ void mapTouchToDisplay(int16_t* x, int16_t* y) {
 #else
   (void)x;
   (void)y;
+#endif
+#if FLIGHTSCNR_TOUCH_SWAP_XY
+  std::swap(*x, *y);
+#endif
+#if FLIGHTSCNR_TOUCH_MIRROR_X
+  *x = static_cast<int16_t>(LCD_WIDTH - 1 - *x);
+#endif
+#if FLIGHTSCNR_TOUCH_MIRROR_Y
+  *y = static_cast<int16_t>(LCD_HEIGHT - 1 - *y);
 #endif
 }
 
@@ -355,7 +412,7 @@ void finishTouchGesture() {
   }
 }
 
-#if !defined(FLIGHTSCNR_BOARD_WAVESHARE_KNOB_18)
+#if FLIGHTSCNR_HAS_CHSC5816
 void pollTouchChsc5816() {
   int16_t x[2] = {};
   int16_t y[2] = {};
@@ -444,15 +501,214 @@ void pollTouchCst816() {
   s_touch_was_down = down;
 }
 
+#if FLIGHTSCNR_HAS_CST9217
+#if FLIGHTSCNR_HAS_TOUCH_DIAL
+// --- Touch dial: the outer ring of the round screen acts as a rotary knob ----
+// A drag that starts near the edge and moves mostly along the ring turns into
+// encoder steps (clockwise = +1). Anything else stays a normal tap or swipe.
+enum class DialState : uint8_t { Off, Undecided, Dial };
+DialState s_dial_state = DialState::Off;
+float s_dial_last_deg = 0.0f;
+float s_dial_accum_deg = 0.0f;
+constexpr int kDialRingWidthPx = 70;
+constexpr int kDialDecidePx = 14;
+constexpr float kDialStepDeg = 18.0f;
+constexpr float kDialTangentialRatio = 1.5f;
+
+float dialAngleDeg(int16_t x, int16_t y) {
+  const float dx = static_cast<float>(x - LCD_WIDTH / 2);
+  const float dy = static_cast<float>(y - LCD_HEIGHT / 2);
+  return std::atan2(dy, dx) * 57.2957795f;
+}
+
+void queueDialStep(int8_t step) {
+  portENTER_CRITICAL(&s_input_mux);
+  s_encoder_step_pending = true;
+  if (step > 0 && s_encoder_pending_delta < 20) {
+    s_encoder_pending_delta = static_cast<int8_t>(s_encoder_pending_delta + 1);
+  } else if (step < 0 && s_encoder_pending_delta > -20) {
+    s_encoder_pending_delta = static_cast<int8_t>(s_encoder_pending_delta - 1);
+  }
+  portEXIT_CRITICAL(&s_input_mux);
+}
+
+void dialOnDown(int16_t x, int16_t y) {
+  const int dx = x - LCD_WIDTH / 2;
+  const int dy = y - LCD_HEIGHT / 2;
+  const int r_inner = LCD_WIDTH / 2 - kDialRingWidthPx;
+  s_dial_state = (dx * dx + dy * dy >= r_inner * r_inner) ? DialState::Undecided
+                                                          : DialState::Off;
+  s_dial_accum_deg = 0.0f;
+  s_dial_last_deg = dialAngleDeg(x, y);
+}
+
+void dialOnMove(int16_t x, int16_t y) {
+  if (s_dial_state == DialState::Undecided) {
+    const float mx = static_cast<float>(x - s_touch_start_x);
+    const float my = static_cast<float>(y - s_touch_start_y);
+    if (mx * mx + my * my < static_cast<float>(kDialDecidePx * kDialDecidePx)) {
+      return;
+    }
+    float rx = static_cast<float>(s_touch_start_x - LCD_WIDTH / 2);
+    float ry = static_cast<float>(s_touch_start_y - LCD_HEIGHT / 2);
+    const float rlen = std::sqrt(rx * rx + ry * ry);
+    if (rlen < 1.0f) {
+      s_dial_state = DialState::Off;
+      return;
+    }
+    rx /= rlen;
+    ry /= rlen;
+    const float radial = std::fabs(mx * rx + my * ry);
+    const float tangential = std::fabs(mx * ry - my * rx);
+    s_dial_state = tangential > kDialTangentialRatio * radial ? DialState::Dial
+                                                              : DialState::Off;
+    if (s_dial_state == DialState::Off) {
+      return;
+    }
+  }
+  if (s_dial_state != DialState::Dial) {
+    return;
+  }
+  const float deg = dialAngleDeg(x, y);
+  float delta = deg - s_dial_last_deg;
+  if (delta > 180.0f) {
+    delta -= 360.0f;
+  } else if (delta < -180.0f) {
+    delta += 360.0f;
+  }
+  s_dial_last_deg = deg;
+  s_dial_accum_deg += delta;
+  while (s_dial_accum_deg >= kDialStepDeg) {
+    queueDialStep(+1);
+    s_dial_accum_deg -= kDialStepDeg;
+  }
+  while (s_dial_accum_deg <= -kDialStepDeg) {
+    queueDialStep(-1);
+    s_dial_accum_deg += kDialStepDeg;
+  }
+}
+
+/** True if the finished touch was a dial turn (so no tap/swipe is queued). */
+bool dialOnUp() {
+  const bool was_dial = s_dial_state == DialState::Dial;
+  s_dial_state = DialState::Off;
+  return was_dial;
+}
+#endif  // FLIGHTSCNR_HAS_TOUCH_DIAL
+
+void touchTrackDown(int16_t x, int16_t y) {
+  mapTouchToDisplay(&x, &y);
+  s_touch_start_x = x;
+  s_touch_start_y = y;
+  s_touch_last_x = x;
+  s_touch_last_y = y;
+  s_touch_tracking = true;
+#if FLIGHTSCNR_HAS_TOUCH_DIAL
+  dialOnDown(x, y);
+#endif
+  hardware::buzzerClick();
+}
+
+void touchTrackMove(int16_t x, int16_t y) {
+  mapTouchToDisplay(&x, &y);
+  s_touch_last_x = x;
+  s_touch_last_y = y;
+#if FLIGHTSCNR_HAS_TOUCH_DIAL
+  dialOnMove(x, y);
+#endif
+}
+
+void touchTrackUp() {
+#if FLIGHTSCNR_HAS_TOUCH_DIAL
+  if (dialOnUp()) {
+    s_touch_tracking = false;
+    return;
+  }
+#endif
+  finishTouchGesture();
+  s_touch_tracking = false;
+}
+
+void pollTouchCst9217() {
+  if (!s_cst9217_ready) {
+    return;
+  }
+  const unsigned long now = millis();
+  if (now - s_cst9217_last_poll_ms < kCst9217PollIntervalMs) {
+    return;
+  }
+  s_cst9217_last_poll_ms = now;
+
+  uint8_t buf[kCst9217MaxFingers * 5 + 5] = {};
+  Wire.beginTransmission(CST9217_SLAVE_ADDRESS);
+  Wire.write(static_cast<uint8_t>(0xD0));
+  Wire.write(static_cast<uint8_t>(0x00));
+  bool valid = false;
+  if (Wire.endTransmission(false) == 0) {
+    const size_t got = Wire.requestFrom(static_cast<uint8_t>(CST9217_SLAVE_ADDRESS),
+                                        static_cast<uint8_t>(sizeof(buf)));
+    if (got == sizeof(buf)) {
+      for (size_t i = 0; i < sizeof(buf); ++i) {
+        buf[i] = static_cast<uint8_t>(Wire.read());
+      }
+      // Acknowledge the frame so the controller publishes the next one.
+      Wire.beginTransmission(CST9217_SLAVE_ADDRESS);
+      Wire.write(static_cast<uint8_t>(0xD0));
+      Wire.write(static_cast<uint8_t>(0x00));
+      Wire.write(kCst9217Ack);
+      Wire.endTransmission();
+      valid = buf[6] == kCst9217Ack && buf[0] != kCst9217Ack && buf[0] != 0x00;
+    } else {
+      while (Wire.available()) {
+        Wire.read();
+      }
+    }
+  }
+
+  if (!valid) {
+    // No fresh frame. Release a stuck touch after a short silence.
+    if (s_touch_was_down && now - s_cst9217_last_valid_ms > kCst9217StaleReleaseMs) {
+      if (s_touch_tracking) {
+        touchTrackUp();
+      }
+      s_touch_was_down = false;
+    }
+    return;
+  }
+  s_cst9217_last_valid_ms = now;
+
+  const uint8_t points = buf[5] & 0x7F;
+  const uint8_t event = buf[0] & 0x0F;
+  const bool down = points > 0 && points <= kCst9217MaxFingers && event == 0x06;
+  const int16_t x = static_cast<int16_t>((buf[1] << 4) | (buf[3] >> 4));
+  const int16_t y = static_cast<int16_t>((buf[2] << 4) | (buf[3] & 0x0F));
+
+  if (down && !s_touch_was_down) {
+    touchTrackDown(x, y);
+  } else if (down && s_touch_tracking) {
+    touchTrackMove(x, y);
+  } else if (!down && s_touch_was_down && s_touch_tracking) {
+    touchTrackUp();
+  }
+  s_touch_was_down = down;
+}
+#endif  // FLIGHTSCNR_HAS_CST9217
+
 void pollTouch() {
   if (!s_touch_ready) {
     return;
   }
 
+#if FLIGHTSCNR_HAS_CST9217
+  if (hardware::panelUsesCst9217()) {
+    pollTouchCst9217();
+    return;
+  }
+#endif
   if (hardware::panelUsesCst816()) {
     pollTouchCst816();
   } else {
-#if !defined(FLIGHTSCNR_BOARD_WAVESHARE_KNOB_18)
+#if FLIGHTSCNR_HAS_CHSC5816
     pollTouchChsc5816();
 #endif
   }
